@@ -1,4 +1,4 @@
-name: Build and Deploy Blazor App
+name: Build and Deploy Blazor App to Azure
 
 on:
   push:
@@ -9,26 +9,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    # 1️⃣ Checkout repository
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Setup .NET
+    # 2️⃣ Setup .NET SDK
+    - name: Setup .NET 9
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
 
+    # 3️⃣ Restore dependencies
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore BlazorAppDemo/BlazorAppDemo.csproj
 
+    # 4️⃣ Build project
     - name: Build project
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --no-restore
 
+    # 5️⃣ Publish project
     - name: Publish project
-      run: dotnet publish -c Release -o ./publish
+      run: dotnet publish BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --output ./publish
 
+    # 6️⃣ Deploy to Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
       with:
-        app-name: ctmblazorwebapp
+        app-name: <your-app-service-name>   # 👈 replace
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ./publish
