@@ -44,15 +44,26 @@ jobs:
 
         echo "Deploying container instance..."
 
-        # Delete existing container if present
+        # Delete existing container if it exists
         if az container show --name $CONTAINER_NAME --resource-group $RG_NAME &>/dev/null; then
           echo "Deleting existing container..."
           az container delete --name $CONTAINER_NAME --resource-group $RG_NAME --yes
         fi
 
-        # Create a new container instance (Linux)
-        az container create --resource-group $RG_NAME --name $CONTAINER_NAME --image $IMAGE --os-type Linux --registry-login-server $ACR_SERVER --registry-username $ACR_USERNAME --registry-password $ACR_PASSWORD --dns-name-label blazorappdemo${{ github.run_number }} --ports 80 --restart-policy Always
+        # Create a new container instance
+        az container create \
+          --resource-group $RG_NAME \
+          --name $CONTAINER_NAME \
+          --image $IMAGE \
+          --os-type Linux \
+          --cpu 1 \
+          --memory 1.5 \
+          --registry-login-server $ACR_SERVER \
+          --registry-username $ACR_USERNAME \
+          --registry-password $ACR_PASSWORD \
+          --dns-name-label blazorappdemo${{ github.run_number }} \
+          --ports 80 \
+          --restart-policy Always
 
-        # Show the public FQDN of the container
         echo "✅ Container deployed successfully!"
         az container show --name $CONTAINER_NAME --resource-group $RG_NAME --query ipAddress.fqdn -o tsv
