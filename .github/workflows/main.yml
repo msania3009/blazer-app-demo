@@ -1,0 +1,72 @@
+name: Multi-Environment Blazor App to Azure 
+
+on:
+  #push:
+  #  branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Choose deployment environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  build:
+    name: Build Blazor App
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Setup .NET SDK
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore BlazorAppDemo/BlazorAppDemo.csproj
+
+      # Build project
+      - name: Build project
+        run: dotnet build BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --no-restore
+
+      # Publish project
+      - name: Publish project
+        run: dotnet publish BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --output ./publish
+
+      # Upload artifact for deployment
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blazor-app
+          path: ./publish
+
+  deploy:
+    name: Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      # Download artifact from build job
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: blazor-app
+          path: ./publish
+
+      # Deploy to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.mywebapp_Name }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
