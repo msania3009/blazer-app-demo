@@ -1,0 +1,44 @@
+name: Call Composite Action CI/CD Blazor App to Azure
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    name: Build Blazor App (Reusable)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run reusable .NET build action
+        uses: ./.github/actions/build-dotnet
+        with:
+          project-path: BlazorAppDemo/BlazorAppDemo.csproj
+          artifact-name: blazor-app
+
+  deploy:
+    name: Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download published artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: blazor-app
+          path: ./publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ctmcourageprodwebapp
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
