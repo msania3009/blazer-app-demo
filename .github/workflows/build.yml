@@ -1,0 +1,37 @@
+name: Reusable Build Blazor App
+
+on:
+  workflow_call:
+    outputs:
+      artifact-name:
+        description: "Name of the build artifact"
+        value: blazor-app
+
+jobs:
+  build:
+    name: Build Blazor App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore BlazorAppDemo/BlazorAppDemo.csproj
+
+      - name: Build project
+        run: dotnet build BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --no-restore
+
+      - name: Publish project
+        run: dotnet publish BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --output ./publish
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blazor-app
+          path: ./publish
