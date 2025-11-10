@@ -1,0 +1,39 @@
+name: "Reusable .NET Build Action"
+description: "Restores, builds, and publishes a .NET/Blazor app"
+
+inputs:
+  project-path:
+    description: "Path to the .csproj file"
+    required: true
+  build-configuration:
+    description: "Build configuration"
+    default: "Release"
+  artifact-name:
+    description: "Name for the uploaded artifact"
+    default: "dotnet-app"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup .NET 9 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      shell: bash
+      run: dotnet restore ${{ inputs.project-path }}
+
+    - name: Build project
+      shell: bash
+      run: dotnet build ${{ inputs.project-path }} --configuration ${{ inputs.build-configuration }} --no-restore
+
+    - name: Publish project
+      shell: bash
+      run: dotnet publish ${{ inputs.project-path }} --configuration ${{ inputs.build-configuration }} --output ./publish
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ./publish
