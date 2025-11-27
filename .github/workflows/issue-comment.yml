@@ -12,7 +12,7 @@ jobs:
   steps:
     - uses: actions/github-script@v8
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        # github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
          await github.rest.issues.createComment({
              owner: context.repo.owner,
@@ -21,21 +21,7 @@ jobs:
             body: "👋 Thanks for opening this issue! We’ll take a look soon."
            });
 
-  # Auto-label bug (case-insensitive)
-    - uses: actions/github-script@v8
-      with:
-         github-token: ${{ secrets.GITHUB_TOKEN }}
-         script: |
-           const title = (context.payload.issue.title || "").toLowerCase(); 
-           const body  = (context.payload.issue.body  || "").toLowerCase();
-           if (title.includes("bug") || body.includes("bug")) {
-            await github.rest.issues.addLabels({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               issue_number: context.issue.number,
-               labels: ["bug"]
-               });
-             }
+ 
 
 
 
